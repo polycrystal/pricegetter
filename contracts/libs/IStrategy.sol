@@ -5,9 +5,13 @@ pragma solidity ^0.8.4;
 interface IStrategy {
     // Want address
     function wantAddress() external view returns (address);
+
+    function earnedAddress() external view returns (address);
     
     // Total want tokens managed by strategy
     function wantLockedTotal() external view returns (uint256);
+
+    function vaultSharesTotal() external view returns (uint256);
 
     // Is strategy paused
     function paused() external view returns (bool);

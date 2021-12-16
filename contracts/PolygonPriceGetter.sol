@@ -2,7 +2,7 @@
 pragma solidity ^0.8.6;
 
 
-import "./libs/AMMInfoPolygon.sol";
+import "./libs/IAMMInfo.sol";
 import "./BasePriceGetter.sol";
 
 // This library provides simple price calculations for ApeSwap tokens, accounting

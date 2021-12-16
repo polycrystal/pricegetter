@@ -21,17 +21,21 @@ contract VaultGetter {
         address token1Address;
         address lpFactoryAddress;
         address earnedAddress;
+        string token0Symbol;
+        string token1Symbol;
     }
     struct VaultInfo {
         bool paused;
         uint wantLockedTotal;
         uint burnedAmount;
+        
         uint lpTokenPrice;
+        uint earnedTokenPrice;
 
+        uint vaultSharesTotal;
+        uint masterchefWantBalance;        
         //uint allocPoint;
         //uint totalAllocPoint;
-        //uint earnedTokenPrice
-        //uint secondRewardTokenPrice;
     }
     struct VaultUser {
 	    uint allowance;
@@ -88,12 +92,29 @@ contract VaultGetter {
 
             try want.token0() returns (address _token0) {
                 f.token0Address = _token0;
+                try IERC20Metadata(_token0).symbol() returns (string memory _symbol0) {
+                    f.token0Symbol = _symbol0;
+                } catch {
+                    try IERC20Metadata(address(_want)).symbol() returns (string memory _symbol0) { //no token0 so use want token instead
+                        f.token0Symbol = _symbol0;
+                    } catch {}
+                }
                 try want.token1() returns (address _token1) {
                     f.token1Address = _token1;
+                    try IERC20Metadata(_token1).symbol() returns (string memory _symbol1) {
+                        f.token1Symbol = _symbol1;
+                    } catch {}
                     try want.factory() returns (address _factory) {
                         f.lpFactoryAddress = _factory;
                     } catch {}
                 } catch {}
+            } catch {
+                try IERC20Metadata(address(_want)).symbol() returns (string memory _symbol0) { //no token0 so use want token instead
+                    f.token0Symbol = _symbol0;
+                } catch {}
+            }
+            try _strat.earnedAddress() returns (address _earned) {
+                f.earnedAddress = _earned;
             } catch {}
 
             emit VaultAdded(f);
@@ -101,47 +122,9 @@ contract VaultGetter {
         }
     }
 
-    function getVault(address vaultHealerAddress, address priceGetterAddress, address _user, uint pid) public view returns (VaultFacts memory facts, VaultInfo memory info, VaultUser memory user) {
-        IVaultHealer vaultHealer = IVaultHealer(vaultHealerAddress);
-        BasePriceGetter priceGetter = BasePriceGetter(priceGetterAddress);
+    function _getUser(address vaultHealerAddress, uint256 pid, IERC20 wantToken, IStrategy strat, uint wantLockedTotal, uint lpTokenPrice, address _user) internal view returns (VaultUser memory user) {
 
-        facts = vaultFacts[vaultHealerAddress][pid];
-
-        IStrategy strat = IStrategy(facts.strategyAddress);
-        try strat.paused() returns (bool _paused) {
-            info.paused = _paused;
-        } catch {}
-        try strat.wantLockedTotal() returns (uint _wantLockedTotal) {
-            info.wantLockedTotal = _wantLockedTotal;
-        } catch{ }
-        try strat.burnedAmount() returns (uint _burnedAmount) {
-            info.burnedAmount = _burnedAmount;
-        } catch{ }
-        try priceGetter.getLPPrice(facts.wantAddress, 18) returns (uint256 price) {
-            info.lpTokenPrice = price;
-        } catch {}
-
-        /*
-        if (facts.masterchefAddress != address(0)) {
-
-            try IMasterchef(facts.masterchefAddress).totalAllocPoint() returns (uint points) {
-                info.totalAllocPoint = points;
-
-                address chef = facts.masterchefAddress;
-                bytes memory input = abi.encodeWithSignature("poolInfo(uint256)",facts.chefPid);
-                bytes memory returndata = Address.functionStaticCall(chef, input);
-
-                if (returndata.length == 0x60) { //MiniChefV2
-                    (,,info.allocPoint) = abi.decode(returndata,(uint128,uint64,uint64));
-                } else if (returndata.length > 0x60) {
-                    (,info.allocPoint,) = abi.decode(returndata,(address,uint256,bytes));
-                }
-            }   catch {}
-
-        }
-        */
-        if (_user != address(0)) {
-            IERC20 wantToken = IERC20(facts.wantAddress);
+       if (_user != address(0)) {
             try wantToken.allowance(_user, vaultHealerAddress) returns (uint allowance) {
                 user.allowance = allowance;
             } catch {}
@@ -149,43 +132,117 @@ contract VaultGetter {
                 user.tokenBalance = _balance;
             } catch {}
             
-            try vaultHealer.userInfo(pid, _user) returns (uint shares) {
+            try IVaultHealer(vaultHealerAddress).userInfo(pid, _user) returns (uint shares) {
                 user.stakedBalance = shares;
-                uint numerator = shares * info.wantLockedTotal;
-                if (numerator > 0) try IStrategy(facts.strategyAddress).sharesTotal() returns (uint sharesTotal) {
+                uint numerator = shares * wantLockedTotal;
+                if (numerator > 0) try strat.sharesTotal() returns (uint sharesTotal) {
                     if (sharesTotal > 0) {
                         user.stakedWantBalance = numerator / sharesTotal;
-                        user.stakedBalanceUSD = user.stakedWantBalance * info.lpTokenPrice;
+                        user.stakedBalanceUSD = numerator * lpTokenPrice / sharesTotal;
                     }
                 } catch {}
-            } catch{}
+            } catch {}
         }
     }
 
-    function getVaults(address vaultHealerAddress, address priceGetterAddress, address user) external view returns (
+    function getVault(address vaultHealerAddress, address priceGetterAddress, uint pid, address _user) internal view returns (VaultFacts memory facts, VaultInfo memory info, VaultUser memory user) {
+        (facts, info) = getVault(vaultHealerAddress, pid);
+        
+        address[] memory priceTokens =  new address[](2);
+        priceTokens[0] = facts.wantAddress;
+        priceTokens[1] = facts.earnedAddress;
+        try BasePriceGetter(priceGetterAddress).getLPPrices(priceTokens, 18) returns (uint256[] memory price) {
+            info.lpTokenPrice = price[0];
+            info.earnedTokenPrice = price[1];
+        } catch {}
+
+        user = _getUser(vaultHealerAddress, pid, IERC20(priceTokens[0]), IStrategy(facts.strategyAddress), info.wantLockedTotal, info.lpTokenPrice, _user);
+    }
+
+    function getVault(address vaultHealerAddress, uint pid) public view returns (VaultFacts memory facts, VaultInfo memory info) {
+
+        facts = vaultFacts[vaultHealerAddress][pid];
+
+        IStrategy strat = IStrategy(facts.strategyAddress);
+        try strat.paused() returns (bool _paused) {
+            info.paused = _paused;
+        } catch {}
+        try strat.vaultSharesTotal() returns (uint _vaultSharesTotal) {
+            info.vaultSharesTotal = _vaultSharesTotal;
+        } catch{ }
+        IERC20 wantToken = IERC20(facts.wantAddress);
+
+        try wantToken.balanceOf(address(strat)) returns (uint _stratWantBalance) {
+            info.wantLockedTotal = info.vaultSharesTotal + _stratWantBalance;
+        } catch {}
+        try strat.burnedAmount() returns (uint _burnedAmount) {
+            info.burnedAmount = _burnedAmount;
+        } catch{ }
+        if (facts.masterchefAddress != address(0)) try wantToken.balanceOf(facts.masterchefAddress) returns (uint _chefWantBalance) {
+            info.masterchefWantBalance = _chefWantBalance;
+        } catch {}
+
+    }
+
+    function getVaults(address vaultHealerAddress, address priceGetterAddress, address _user) external view returns (
         VaultFacts[] memory facts, 
         VaultInfo[] memory infos, 
-        VaultUser[] memory users
+        VaultUser[] memory user
     ) {
-        return getVaults(vaultHealerAddress, priceGetterAddress, user, 0, 0);
+        (facts, infos) =  getVaults(vaultHealerAddress, priceGetterAddress, 0, 0);
+        uint len = facts.length;
+        user = new VaultUser[](len);
+
+        for (uint i; i < len; i++) {
+            user[i] = _getUser(vaultHealerAddress, i, IERC20(facts[i].wantAddress), IStrategy(facts[i].strategyAddress), infos[i].wantLockedTotal, infos[i].lpTokenPrice, _user);
+        }
     }
 
-    function getVaults(address vaultHealerAddress, address priceGetterAddress, address user, uint start, uint end) public view returns (
+    function getVaults(address vaultHealerAddress, address priceGetterAddress) external view returns (
+        VaultFacts[] memory facts, 
+        VaultInfo[] memory infos
+    ) {
+        return getVaults(vaultHealerAddress, priceGetterAddress, 0, 0);
+    }
+
+    function getVaults(address vaultHealerAddress, address priceGetterAddress, uint start, uint end, address _user) external view returns (
     VaultFacts[] memory facts, 
-    VaultInfo[] memory infos, 
-    VaultUser[] memory users
+    VaultInfo[] memory infos,
+    VaultUser[] memory user
+    ) {
+        (facts, infos) = getVaults(vaultHealerAddress, priceGetterAddress, start, end);
+        uint len = end - start;
+        user = new VaultUser[](len);
+        for (uint i; i < len; i++) {
+            user[i] = _getUser(vaultHealerAddress, i + start, IERC20(facts[i].wantAddress), IStrategy(facts[i].strategyAddress), infos[i].wantLockedTotal, infos[i].lpTokenPrice, _user);
+        }
+    }
+
+    function getVaults(address vaultHealerAddress, address priceGetterAddress, uint start, uint end) public view returns (
+    VaultFacts[] memory facts, 
+    VaultInfo[] memory infos
     ) {
         uint len = vaultFacts[vaultHealerAddress].length;
-        if (end == 0) end = len;
-        if (start >= end || end > len) revert("invalid range");
+        if (end == 0 || end > len) end = len;
+        if (start >= end) revert("invalid range");
 
-        facts = new VaultFacts[](end - start);
-        infos = new VaultInfo[](end - start);
-        users = new VaultUser[](end - start);
-        
-        for (uint i = start; i < end; i++) {
-            (facts[i], infos[i], users[i]) = getVault(vaultHealerAddress, priceGetterAddress, user, i);
+        len = end - start;
+        facts = new VaultFacts[](len);
+        infos = new VaultInfo[](len);
+        address[] memory priceTokens =  new address[](2 * len);
+
+        for (uint i; i < len; i++) {
+            (facts[i], infos[i]) = getVault(vaultHealerAddress, i + start);
+            priceTokens[2*i] = facts[i].wantAddress;
+            priceTokens[2*i + 1] = facts[i].earnedAddress;
         }
+
+        try BasePriceGetter(priceGetterAddress).getLPPrices(priceTokens, 18) returns (uint256[] memory price) {
+            for (uint i; i < len; i++) {
+                infos[i].lpTokenPrice = price[2*i];
+                infos[i].earnedTokenPrice = price[2*i + 1];
+            }
+        } catch {}
 
     }
 }

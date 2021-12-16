@@ -59,7 +59,7 @@ contract AMMInfoPolygon is IAMMInfo {
     }
 
     function getAmmList() public pure returns (AmmInfo[] memory list) {
-        list = new AmmInfo[](8);
+        list = new AmmInfo[](7);
         list[0] = AmmInfo({
             name: "ApeSwap", 
             router: 0xC0788A3aD43d79aa53B09c2EaCc313A787d1d607,
@@ -102,7 +102,7 @@ contract AMMInfoPolygon is IAMMInfo {
             paircodehash: WAULT_PAIRCODEHASH,
             fee: WAULT_FEE
         });
-        list[7] = AmmInfo({
+        list[6] = AmmInfo({
             name: "PolyCat", 
             router: 0x94930a328162957FF1dd48900aF67B5439336cBD,
             factory: POLYCAT_FACTORY,
