@@ -8,10 +8,9 @@ Join us at Crystl.Finance!
 ▀▀▀ ▀░▀▀ ▄▄▄█ ▀▀▀ ░░▀░░ ▀░░▀ ▀▀▀
 */
 
+import "./IAMMInfo.sol";
 
-import "./IUniRouter.sol";
-import "./IUniPair.sol";
-contract AMMInfo {
+contract AMMInfoCronos is IAMMInfo {
 
     address constant private PHOTON_FACTORY = 0x462C98Cae5AffEED576c98A55dAA922604e2D875;
     address constant private CRODEX_FACTORY = 0xe9c29cB475C0ADe80bE0319B74AD112F1e80058F; //0xe9c29cB475C0ADe80bE0319B74AD112F1e80058F
@@ -38,14 +37,6 @@ contract AMMInfo {
     uint8 constant private CHRONO_FEE = 20;
     uint8 constant private VVS_FEE = 30; //?
     uint8 constant private SMOL_FEE = 30; //?
-
-    struct AmmInfo {
-        string name;
-        address router;
-        address factory;
-        uint8 fee;
-        bytes32 paircodehash;
-    }
 
     constructor() {
         AmmInfo[] memory list = getAmmList();
@@ -115,19 +106,5 @@ contract AMMInfo {
             fee: SMOL_FEE
         });
     }
-
-    // calculates the CREATE2 address for a pair without making any external calls
-    function pairFor(address tokenA, address tokenB, address factory, bytes32 initcodehash) private pure returns (address pair) {
-        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        pair = address(uint160(uint(keccak256(abi.encodePacked(
-                hex'ff',
-                factory,
-                keccak256(abi.encodePacked(token0, token1)),
-                initcodehash
-        )))));
-    }
-
-    
-
 
 }

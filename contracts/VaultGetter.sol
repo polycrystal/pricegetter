@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: GPL
 pragma solidity ^0.8.10;
 
-import "./IVaultHealer.sol"; // polygon: 0xd4d696ad5a7779f4d3a0fc1361adf46ec51c632d
+import "./libs/IVaultHealer.sol"; // polygon: 0xd4d696ad5a7779f4d3a0fc1361adf46ec51c632d
 import "./libs/IUniPair.sol";
 import "./libs/IMasterchef.sol";
+import "./BasePriceGetter.sol"; //polygon: 0x05D6C73D7de6E02B3f57677f849843c03320681c
 uint constant GAS_FACTOR = 200000;
-
-interface IPriceGetter { //polygon: 0x05D6C73D7de6E02B3f57677f849843c03320681c
-    function getLPPrice(address,uint) external view returns (uint);
-}
 
 contract VaultGetter {
 
@@ -50,7 +47,7 @@ contract VaultGetter {
     event VaultAdded(VaultFacts facts);
     function sync(address vaultHealerAddress) external {
         //add immutable data for all vaults not already included
-        VaultHealer vaultHealer = VaultHealer(vaultHealerAddress);
+        IVaultHealer vaultHealer = IVaultHealer(vaultHealerAddress);
         uint vhLen = vaultHealer.poolLength();
         uint factLen = vaultFacts[vaultHealerAddress].length;
         //assert(factLen <= vhLen);
@@ -62,19 +59,19 @@ contract VaultGetter {
         for (uint i = factLen; i < vhLen; i++) {
             facts.push();
             VaultFacts storage f = facts[i];
-            (IERC20 _want, address _strat) = vaultHealer.poolInfo(i);
+            (IERC20 _want, IStrategy _strat) = vaultHealer.poolInfo(i);
             uint16 vaultPid = uint16(i);
             uint16 chefPid;
             uint8 tolerance;
             address masterchefAddress;
 
-            try IStrategy(_strat).pid() returns (uint256 _chefPid) {
+            try _strat.pid() returns (uint256 _chefPid) {
                 chefPid = uint16(_chefPid);
             } catch {}
-            try IStrategy(_strat).tolerance() returns (uint256 _tolerance) {
+            try _strat.tolerance() returns (uint256 _tolerance) {
                 tolerance = uint8(_tolerance);
             } catch {}
-            try IStrategy(_strat).masterchefAddress() returns (address _masterchef) {
+            try _strat.masterchefAddress() returns (address _masterchef) {
                 masterchefAddress = _masterchef;
             } catch {}
 
@@ -85,7 +82,7 @@ contract VaultGetter {
             f.masterchefAddress = masterchefAddress;
 
             f.wantAddress = address(_want);
-            f.strategyAddress = _strat;
+            f.strategyAddress = address(_strat);
 
             IUniPair want = IUniPair(address(_want));
 
@@ -105,8 +102,8 @@ contract VaultGetter {
     }
 
     function getVault(address vaultHealerAddress, address priceGetterAddress, address _user, uint pid) public view returns (VaultFacts memory facts, VaultInfo memory info, VaultUser memory user) {
-        VaultHealer vaultHealer = VaultHealer(vaultHealerAddress);
-        IPriceGetter priceGetter = IPriceGetter(priceGetterAddress);
+        IVaultHealer vaultHealer = IVaultHealer(vaultHealerAddress);
+        BasePriceGetter priceGetter = BasePriceGetter(priceGetterAddress);
 
         facts = vaultFacts[vaultHealerAddress][pid];
 
