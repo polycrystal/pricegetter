@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import "./libs/AMMInfoCronos.sol";
+import "./libs/IAMMInfo.sol";
 import "./BasePriceGetter.sol";
 
 // This library provides simple price calculations for Crodex tokens, accounting
