@@ -18,7 +18,7 @@ contract AMMInfoCronos is IAMMInfo {
     address constant private ELK_FACTORY = 0xEEa0e2830D09D8786Cb9F484cA20898b61819ef1; //0xEEa0e2830D09D8786Cb9F484cA20898b61819ef1
     address constant private CHRONO_FACTORY = 0x6C50Ee65CFcfC59B09C570e55D76daa7c67D6da5; //0x6C50Ee65CFcfC59B09C570e55D76daa7c67D6da5
     address constant private VVS_FACTORY = 0x3B44B2a187a7b3824131F8db5a74194D0a42Fc15;
-    address constant private SMOL_FACTORY = address(0);
+    //address constant private SMOL_FACTORY = address(0);
 
     //used for internally locating a pair without an external call to the factory
     bytes32 constant private PHOTON_PAIRCODEHASH = hex'01429e880a7972ebfbba904a5bbe32a816e78273e4b38ffa6bdeaebce8adba7c';
@@ -26,8 +26,8 @@ contract AMMInfoCronos is IAMMInfo {
     bytes32 constant private CRONA_PAIRCODEHASH = hex'c93158cffa5b575e32566e81e847754ce517f8fa988d3e25cf346d916216e06f';
     bytes32 constant private ELK_PAIRCODEHASH = hex'84845e7ccb283dec564acfcd3d9287a491dec6d675705545a2ab8be22ad78f31';
     bytes32 constant private CHRONO_PAIRCODEHASH = hex'c98c8a44f227342a1b0a885d127d26c6fedc5cc43f38c469de814ed4d0e383b1';
-    bytes32 constant private VVS_PAIRCODEHASH = hex''; //?
-    bytes32 constant private SMOL_PAIRCODEHASH = hex''; //?
+    bytes32 constant private VVS_PAIRCODEHASH = hex'c93158cffa5b575e32566e81e847754ce517f8fa988d3e25cf346d916216e06f';
+    //bytes32 constant private SMOL_PAIRCODEHASH = hex''; //?
 
     // Fees are in increments of 1 basis point (0.01%)
     uint8 constant private PHOTON_FEE = 30; 
@@ -35,8 +35,8 @@ contract AMMInfoCronos is IAMMInfo {
     uint8 constant private CRONA_FEE = 25;
     uint8 constant private ELK_FEE = 30;
     uint8 constant private CHRONO_FEE = 20;
-    uint8 constant private VVS_FEE = 30; //?
-    uint8 constant private SMOL_FEE = 30; //?
+    uint8 constant private VVS_FEE = 30;
+    //uint8 constant private SMOL_FEE = 30; //?
 
     constructor() {
         AmmInfo[] memory list = getAmmList();
@@ -55,7 +55,7 @@ contract AMMInfoCronos is IAMMInfo {
     }
 
     function getAmmList() public pure returns (AmmInfo[] memory list) {
-        list = new AmmInfo[](7);
+        list = new AmmInfo[](6);
         list[0] = AmmInfo({
             name: "PhotonSwap", 
             router: 0x69004509291F4a4021fA169FafdCFc2d92aD02Aa, 
@@ -98,13 +98,14 @@ contract AMMInfoCronos is IAMMInfo {
             paircodehash: VVS_PAIRCODEHASH,
             fee: VVS_FEE
         });
-        list[6] = AmmInfo({
+/*        list[6] = AmmInfo({
             name: "SmolSwap", 
             router: address(0), //!?
             factory: SMOL_FACTORY,
             paircodehash: SMOL_PAIRCODEHASH,
             fee: SMOL_FEE
         });
+*/
     }
 
 }
