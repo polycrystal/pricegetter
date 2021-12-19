@@ -26,7 +26,7 @@ contract AMMInfoCronos is IAMMInfo {
     bytes32 constant private CRONA_PAIRCODEHASH = hex'c93158cffa5b575e32566e81e847754ce517f8fa988d3e25cf346d916216e06f';
     bytes32 constant private ELK_PAIRCODEHASH = hex'84845e7ccb283dec564acfcd3d9287a491dec6d675705545a2ab8be22ad78f31';
     bytes32 constant private CHRONO_PAIRCODEHASH = hex'c98c8a44f227342a1b0a885d127d26c6fedc5cc43f38c469de814ed4d0e383b1';
-    bytes32 constant private VVS_PAIRCODEHASH = hex'c93158cffa5b575e32566e81e847754ce517f8fa988d3e25cf346d916216e06f';
+    bytes32 constant private VVS_PAIRCODEHASH = hex'a77ee1cc0f39570ddde947459e293d7ebc2c30ff4e8fc45860afdcb2c2d3dc17';
     //bytes32 constant private SMOL_PAIRCODEHASH = hex''; //?
 
     // Fees are in increments of 1 basis point (0.01%)
