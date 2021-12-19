@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.9;
 
 import "./libs/IVaultHealer.sol"; // polygon: 0xd4d696ad5a7779f4d3a0fc1361adf46ec51c632d
 import "./libs/IUniPair.sol";
@@ -145,8 +145,8 @@ contract VaultGetter {
         }
     }
 
-    function getVault(address vaultHealerAddress, address priceGetterAddress, uint pid, address _user) internal view returns (VaultFacts memory facts, VaultInfo memory info, VaultUser memory user) {
-        (facts, info) = getVault(vaultHealerAddress, pid);
+    function getVault(address vaultHealerAddress, address priceGetterAddress, uint pid, address _user) public view returns (VaultFacts memory facts, VaultInfo memory info, VaultUser memory user) {
+        (facts, info) = _getVault(vaultHealerAddress, pid);
         
         address[] memory priceTokens =  new address[](2);
         priceTokens[0] = facts.wantAddress;
@@ -159,7 +159,7 @@ contract VaultGetter {
         user = _getUser(vaultHealerAddress, pid, IERC20(priceTokens[0]), IStrategy(facts.strategyAddress), info.wantLockedTotal, info.lpTokenPrice, _user);
     }
 
-    function getVault(address vaultHealerAddress, uint pid) public view returns (VaultFacts memory facts, VaultInfo memory info) {
+    function _getVault(address vaultHealerAddress, uint pid) internal view returns (VaultFacts memory facts, VaultInfo memory info) {
 
         facts = vaultFacts[vaultHealerAddress][pid];
 
@@ -182,7 +182,7 @@ contract VaultGetter {
             info.masterchefWantBalance = _chefWantBalance;
         } catch {}
 
-    }
+    } 
 
     function getVaults(address vaultHealerAddress, address priceGetterAddress, address _user) external view returns (
         VaultFacts[] memory facts, 
@@ -232,7 +232,7 @@ contract VaultGetter {
         address[] memory priceTokens =  new address[](2 * len);
 
         for (uint i; i < len; i++) {
-            (facts[i], infos[i]) = getVault(vaultHealerAddress, i + start);
+            (facts[i], infos[i]) = _getVault(vaultHealerAddress, i + start);
             priceTokens[2*i] = facts[i].wantAddress;
             priceTokens[2*i + 1] = facts[i].earnedAddress;
         }
