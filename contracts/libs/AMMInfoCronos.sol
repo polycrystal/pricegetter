@@ -93,7 +93,7 @@ contract AMMInfoCronos is IAMMInfo {
         });
         list[5] = AmmInfo({
             name: "VVS", 
-            router: address(0), //!?
+            router: 0x145863Eb42Cf62847A6Ca784e6416C1682b1b2Ae,
             factory: VVS_FACTORY,
             paircodehash: VVS_PAIRCODEHASH,
             fee: VVS_FEE
