@@ -47,6 +47,7 @@ contract VaultGetter {
 
 
     mapping(address => VaultFacts[]) public vaultFacts; //vaultHealer =>
+    mapping(address => uint8) internal wantDecimals;
 
     event VaultAdded(VaultFacts facts);
     function sync(address vaultHealerAddress) external {
@@ -92,6 +93,7 @@ contract VaultGetter {
 
             try want.token0() returns (address _token0) {
                 f.token0Address = _token0;
+                wantDecimals[address(want)] = 18;
                 try IERC20Metadata(_token0).symbol() returns (string memory _symbol0) {
                     f.token0Symbol = _symbol0;
                 } catch {
@@ -112,6 +114,13 @@ contract VaultGetter {
                 try IERC20Metadata(address(_want)).symbol() returns (string memory _symbol0) { //no token0 so use want token instead
                     f.token0Symbol = _symbol0;
                 } catch {}
+                if (wantDecimals[address(want)] == 0) {
+                    try IERC20Metadata(address(want)).decimals() returns (uint8 decimals) {
+                        wantDecimals[address(want)] = decimals;
+                    } catch {
+                        wantDecimals[address(want)] = 18;
+                    }
+                }
             }
             try _strat.earnedAddress() returns (address _earned) {
                 f.earnedAddress = _earned;
@@ -138,7 +147,7 @@ contract VaultGetter {
                 if (numerator > 0) try strat.sharesTotal() returns (uint sharesTotal) {
                     if (sharesTotal > 0) {
                         user.stakedWantBalance = numerator / sharesTotal;
-                        user.stakedBalanceUSD = numerator * lpTokenPrice / sharesTotal;
+                        user.stakedBalanceUSD = numerator * lpTokenPrice / sharesTotal / 10**wantDecimals[address(wantToken)];
                     }
                 } catch {}
             } catch {}
