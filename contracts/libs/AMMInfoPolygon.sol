@@ -21,6 +21,7 @@ contract AMMInfoPolygon is IAMMInfo {
     address constant private WAULT_FACTORY = 0xa98ea6356A316b44Bf710D5f9b6b4eA0081409Ef; 
     //address constant private BONE_FACTORY = 0xf1F4d4C5F4C20DDAC22CF5FBEdEe025401645c95;
     address constant private POLYCAT_FACTORY = 0x477Ce834Ae6b7aB003cCe4BC4d8697763FF456FA;
+    address constant private GREENHOUSE_FACTORY = 0x75ED971834B0e176A053AC959D9Cf77F0B4c89D0;
 
     //used for internally locating a pair without an external call to the factory
     bytes32 constant private APE_PAIRCODEHASH = hex'511f0f358fe530cda0859ec20becf391718fdf5a329be02f4c95361f3d6a42d8';
@@ -31,6 +32,7 @@ contract AMMInfoPolygon is IAMMInfo {
     bytes32 constant private WAULT_PAIRCODEHASH = hex'1cdc2246d318ab84d8bc7ae2a3d81c235f3db4e113f4c6fdc1e2211a9291be47';
     //bytes32 constant private BONE_PAIRCODEHASH = hex'06fd5cbbb236425013aaf86e956638e6888c10bea58ca23d9bef578c3df5b83d';
     bytes32 constant private POLYCAT_PAIRCODEHASH = hex'3cad6f9e70e13835b4f07e5dd475f25a109450b22811d0437da51e66c161255a';
+    bytes32 constant private GREENHOUSE_PAIRCODEHASH = hex'c9e8436955a85a2d7b01c9c3d63e0f208f26e44f0f39b712d06db3c7572e7992';
 
     // Fees are in increments of 1 basis point (0.01%)
     uint8 constant private APE_FEE = 20; 
@@ -41,6 +43,7 @@ contract AMMInfoPolygon is IAMMInfo {
     uint8 constant private WAULT_FEE = 20;
     //uint8 constant private BONE_FEE = 20;
     uint8 constant private POLYCAT_FEE = 24;
+    uint8 constant private GREENHOUSE_FEE = 18;
 
     constructor() {
         AmmInfo[] memory list = getAmmList();
@@ -59,7 +62,7 @@ contract AMMInfoPolygon is IAMMInfo {
     }
 
     function getAmmList() public pure returns (AmmInfo[] memory list) {
-        list = new AmmInfo[](7);
+        list = new AmmInfo[](8);
         list[0] = AmmInfo({
             name: "ApeSwap", 
             router: 0xC0788A3aD43d79aa53B09c2EaCc313A787d1d607,
@@ -108,6 +111,13 @@ contract AMMInfoPolygon is IAMMInfo {
             factory: POLYCAT_FACTORY,
             paircodehash: POLYCAT_PAIRCODEHASH,
             fee: POLYCAT_FEE
+        });
+        list[7] = AmmInfo({
+            name: "GreenHouse", 
+            router: 0x324Af1555Ea2b98114eCb852ed67c2B5821b455b,
+            factory: GREENHOUSE_FACTORY,
+            paircodehash: GREENHOUSE_PAIRCODEHASH,
+            fee: GREENHOUSE_FEE
         });
     }
 }
