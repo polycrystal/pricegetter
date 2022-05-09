@@ -16,6 +16,7 @@ contract BSCPriceGetter is BasePriceGetter {
     
     //Token addresses
     //address constant WBTC = 0x062E66477Faf219F25D27dCED647BF57C3107d52; //8 decimals
+    address constant BUSD = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
 
     // PancakeSwap LP addresses
     address private constant WBNB_USDT_PAIR = 0x16b9a82891338f9bA80E2D6970FddA79D1eb0daE;
@@ -41,7 +42,7 @@ contract BSCPriceGetter is BasePriceGetter {
         (uint wbnbReserve1, uint daiReserve,) = IUniPair(WBNB_BUSD_PAIR).getReserves();
         (uint wbnbReserve2, uint usdcReserve,) = IUniPair(WBNB_USDC_PAIR).getReserves();
         uint wbnbTotal = wbnbReserve0 + wbnbReserve1 + wbnbReserve2;
-        uint usdTotal = daiReserve + (usdcReserve + usdtReserve); // 1e18 USDC/T == 1e30 BUSD
+        uint usdTotal = daiReserve + usdcReserve + usdtReserve; // 1e18 USDC/T == 1e30 BUSD
         
         return usdTotal * PRECISION / wbnbTotal; 
     }
@@ -57,4 +58,24 @@ contract BSCPriceGetter is BasePriceGetter {
         return usdTotal * PRECISION / wethTotal; 
     }
     
+    //if one of the peg tokens, returns that price, otherwise zero
+    function pegTokenPrice(address token, uint gasPrice, uint ethPrice) internal override view returns (uint) {
+        if (token == USDT || token == USDC || token == DAI || token == BUSD) return PRECISION;
+        if (token == WNATIVE) return gasPrice;
+        if (token == WETH) return ethPrice;
+        return 0;
+    }
+    function pegTokenPrice(address token) internal override view returns (uint) {
+        if (token == USDT || token == USDC || token == DAI || token == BUSD) return PRECISION;
+        if (token == WNATIVE) return getGasPrice();
+        if (token == WETH) return getETHPrice();
+        return 0;
+    }
+
+    // checks for primary tokens and returns the correct predetermined price if possible, otherwise calculates price
+    function _getRawPrice(address token) internal override view returns (uint pairedValue, uint numTokens) {
+        (numTokens, pairedValue) = super._getRawPrice(token);
+        (numTokens, pairedValue) = pairTokensAndValueMulti(numTokens, pairedValue, token, BUSD);
+    }
+
 }

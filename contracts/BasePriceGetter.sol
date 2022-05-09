@@ -140,38 +140,21 @@ abstract contract BasePriceGetter is Ownable {
         return 0;
     }
 
-    // checks for primary tokens and returns the correct predetermined price if possible, otherwise calculates price
-    function getRawPrice(address token, uint gasPrice, uint ethPrice) internal view returns (uint rawPrice) {
+    function getRawPrice(address token, uint gasPrice, uint ethPrice) internal view returns (uint) {
         uint pegPrice = pegTokenPrice(token, gasPrice, ethPrice);
-        if (pegPrice != 0) return pegPrice;
+        if (pegPrice != 0) return pegPrice;        
+        (uint pairedValue, uint numTokens) = _getRawPrice(token);
+        return numTokens > 0 ? pairedValue / numTokens : 0;
+    }
 
-        uint numTokens;
-        uint pairedValue;
-        
-        uint lpTokens;
-        uint lpValue;
-        
-        (lpTokens, lpValue) = pairTokensAndValueMulti(token, WNATIVE);
-        numTokens += lpTokens;
-        pairedValue += lpValue;
-        
-        (lpTokens, lpValue) = pairTokensAndValueMulti(token, WETH);
-        numTokens += lpTokens;
-        pairedValue += lpValue;
-        
-        (lpTokens, lpValue) = pairTokensAndValueMulti(token, DAI);
-        numTokens += lpTokens;
-        pairedValue += lpValue;
-        
-        (lpTokens, lpValue) = pairTokensAndValueMulti(token, USDC);
-        numTokens += lpTokens;
-        pairedValue += lpValue;
-        
-        (lpTokens, lpValue) = pairTokensAndValueMulti(token, USDT);
-        numTokens += lpTokens;
-        pairedValue += lpValue;
-        
-        if (numTokens > 0) return pairedValue / numTokens;
+    // checks for primary tokens and returns the correct predetermined price if possible, otherwise calculates price
+    function _getRawPrice(address token) internal virtual view returns (uint pairedValue, uint numTokens) {
+        (numTokens, pairedValue) = pairTokensAndValueMulti(numTokens, pairedValue, token, WNATIVE);
+        (numTokens, pairedValue) = pairTokensAndValueMulti(numTokens, pairedValue, token, WETH);
+        (numTokens, pairedValue) = pairTokensAndValueMulti(numTokens, pairedValue, token, DAI);
+        (numTokens, pairedValue) = pairTokensAndValueMulti(numTokens, pairedValue, token, USDC);
+        (numTokens, pairedValue) = pairTokensAndValueMulti(numTokens, pairedValue, token, USDT);
+
     }
 
     //returns the number of tokens and the USD value within a single LP. peg is one of the listed primary, pegPrice is the predetermined USD value of this token
@@ -194,8 +177,9 @@ abstract contract BasePriceGetter is Ownable {
 
     }
 
-    function pairTokensAndValueMulti(address token, address peg) private view returns (uint tokenNum, uint pegValue) {
-        
+    function pairTokensAndValueMulti(uint _tokenNum, uint _pegValue, address token, address peg) internal view returns (uint tokenNum, uint pegValue) {
+        tokenNum = _tokenNum;
+        pegValue = _pegValue;
         AmmInfo[] memory amms = IAMMInfo(datafile).getAmmList();
         //across all AMMs in AMMData library
         for (uint i; i < amms.length; i++) {
