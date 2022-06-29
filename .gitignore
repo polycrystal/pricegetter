@@ -14,3 +14,12 @@ artifacts
 #Environment Variables
 .env
 .env.*
+node_modules
+.env
+coverage
+coverage.json
+typechain
+
+#Hardhat files
+cache
+artifacts

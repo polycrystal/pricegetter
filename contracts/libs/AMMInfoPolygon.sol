@@ -19,7 +19,6 @@ contract AMMInfoPolygon is IAMMInfo {
     address constant private DFYN_FACTORY = 0xE7Fb3e833eFE5F9c441105EB65Ef8b261266423B;
     address constant private JET_FACTORY = 0x668ad0ed2622C62E24f0d5ab6B6Ac1b9D2cD4AC7;
     address constant private WAULT_FACTORY = 0xa98ea6356A316b44Bf710D5f9b6b4eA0081409Ef; 
-    //address constant private BONE_FACTORY = 0xf1F4d4C5F4C20DDAC22CF5FBEdEe025401645c95;
     address constant private POLYCAT_FACTORY = 0x477Ce834Ae6b7aB003cCe4BC4d8697763FF456FA;
     address constant private GREENHOUSE_FACTORY = 0x75ED971834B0e176A053AC959D9Cf77F0B4c89D0;
 
@@ -30,7 +29,6 @@ contract AMMInfoPolygon is IAMMInfo {
     bytes32 constant private DFYN_PAIRCODEHASH = hex'f187ed688403aa4f7acfada758d8d53698753b998a3071b06f1b777f4330eaf3';
     bytes32 constant private JET_PAIRCODEHASH = hex'505c843b83f01afef714149e8b174427d552e1aca4834b4f9b4b525f426ff3c6';
     bytes32 constant private WAULT_PAIRCODEHASH = hex'1cdc2246d318ab84d8bc7ae2a3d81c235f3db4e113f4c6fdc1e2211a9291be47';
-    //bytes32 constant private BONE_PAIRCODEHASH = hex'06fd5cbbb236425013aaf86e956638e6888c10bea58ca23d9bef578c3df5b83d';
     bytes32 constant private POLYCAT_PAIRCODEHASH = hex'3cad6f9e70e13835b4f07e5dd475f25a109450b22811d0437da51e66c161255a';
     bytes32 constant private GREENHOUSE_PAIRCODEHASH = hex'c9e8436955a85a2d7b01c9c3d63e0f208f26e44f0f39b712d06db3c7572e7992';
 
@@ -41,7 +39,6 @@ contract AMMInfoPolygon is IAMMInfo {
     uint8 constant private DFYN_FEE = 30;
     uint8 constant private JET_FEE = 0;
     uint8 constant private WAULT_FEE = 20;
-    //uint8 constant private BONE_FEE = 20;
     uint8 constant private POLYCAT_FEE = 24;
     uint8 constant private GREENHOUSE_FEE = 18;
 
